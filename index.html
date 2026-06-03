@@ -2,108 +2,175 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Финансовое приложение</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Bank UI</title>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <style>
-body {
-    font-family: Arial;
-    max-width: 500px;
-    margin: 20px auto;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+body{
+    margin:0;
+    font-family:'Inter', sans-serif;
+    background: linear-gradient(135deg,#0f172a,#111827);
+    color:#fff;
 }
 
-nav button {
-    width: 24%;
-    padding: 10px;
-    margin: 2px;
+/* HEADER */
+header{
+    padding:20px;
+    text-align:center;
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:1px;
 }
 
-.page {
-    display: none;
+/* CARD TOTAL */
+.card{
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+    margin:15px;
+    padding:15px;
+    border-radius:16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
-.active {
-    display: block;
+/* NAV */
+nav{
+    display:flex;
+    justify-content:space-around;
+    margin:10px;
 }
 
-input, button, select {
-    width: 100%;
-    padding: 10px;
-    margin: 5px 0;
+nav button{
+    flex:1;
+    margin:3px;
+    padding:10px;
+    border:none;
+    border-radius:12px;
+    background: rgba(255,255,255,0.08);
+    color:#fff;
+    font-weight:600;
 }
 
-.item {
-    display: flex;
-    justify-content: space-between;
+/* ACTIVE BUTTON */
+nav button:hover{
+    background:#2563eb;
+}
+
+/* PAGE */
+.page{ display:none; }
+.active{ display:block; }
+
+/* INPUTS */
+input, select{
+    width:100%;
+    padding:12px;
+    margin:6px 0;
+    border-radius:12px;
+    border:none;
+    outline:none;
+    background: rgba(255,255,255,0.08);
+    color:#fff;
+}
+
+button.action{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border:none;
+    border-radius:12px;
+    background:#2563eb;
+    color:#fff;
+    font-weight:600;
+}
+
+/* LIST */
+.item{
+    display:flex;
+    justify-content:space-between;
+    padding:10px;
+    margin:5px 0;
+    border-radius:10px;
+    background: rgba(255,255,255,0.05);
+}
+
+/* COLORS */
+.income{ color:#22c55e; }
+.expense{ color:#ef4444; }
+.saving{ color:#fbbf24; }
+
+.small{
+    opacity:0.7;
+    font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>💰 Финансовое приложение</h2>
+<header>💳 Neo Finance Bank</header>
 
-<!-- НАВИГАЦИЯ -->
-<nav>
-    <button onclick="showPage('total')">Итого</button>
-    <button onclick="showPage('income')">Доходы</button>
-    <button onclick="showPage('expense')">Расходы</button>
-    <button onclick="showPage('saving')">Накопления</button>
-</nav>
-
-<!-- ФИЛЬТР -->
-<h3>📅 Фильтр</h3>
-
-<select id="filterType" onchange="render()">
-    <option value="all">Все</option>
-    <option value="day">День</option>
-    <option value="month">Месяц</option>
-    <option value="year">Год</option>
-</select>
-
-<input type="date" id="filterDate" onchange="render()">
-
-<!-- ИТОГО -->
-<div id="total" class="page active">
-    <h3>📊 Итого</h3>
+<!-- TOTAL -->
+<div class="card">
+    <h3>📊 Баланс</h3>
     <div id="totalView"></div>
 </div>
 
-<!-- ДОХОДЫ -->
-<div id="income" class="page">
-    <h3>💵 Доходы</h3>
-    <input id="incomeName" placeholder="Название">
+<!-- NAV -->
+<nav>
+    <button onclick="showPage('income')">Доход</button>
+    <button onclick="showPage('expense')">Расход</button>
+    <button onclick="showPage('saving')">Сбережения</button>
+</nav>
+
+<!-- FILTER -->
+<div class="card">
+    <h4>📅 Фильтр</h4>
+    <select id="filterType" onchange="render()">
+        <option value="all">Все</option>
+        <option value="day">День</option>
+        <option value="month">Месяц</option>
+        <option value="year">Год</option>
+    </select>
+    <input type="date" id="filterDate" onchange="render()">
+</div>
+
+<!-- INCOME -->
+<div id="income" class="page active card">
+    <h3 class="income">💵 Доходы</h3>
+    <input id="incomeName" placeholder="Источник">
     <input id="incomeDate" type="date">
-    <input id="incomeAmount" type="number">
-    <button onclick="add('income')">Добавить</button>
+    <input id="incomeAmount" type="number" placeholder="Сумма">
+    <button class="action" onclick="add('income')">Добавить доход</button>
     <div id="incomeList"></div>
 </div>
 
-<!-- РАСХОДЫ -->
-<div id="expense" class="page">
-    <h3>💸 Расходы</h3>
-    <input id="expenseName" placeholder="Название">
+<!-- EXPENSE -->
+<div id="expense" class="page card">
+    <h3 class="expense">💸 Расходы</h3>
+    <input id="expenseName" placeholder="Категория">
     <input id="expenseDate" type="date">
-    <input id="expenseAmount" type="number">
-    <button onclick="add('expense')">Добавить</button>
+    <input id="expenseAmount" type="number" placeholder="Сумма">
+    <button class="action" onclick="add('expense')">Добавить расход</button>
     <div id="expenseList"></div>
 </div>
 
-<!-- НАКОПЛЕНИЯ -->
-<div id="saving" class="page">
-    <h3>🏦 Накопления</h3>
-    <input id="savingName" placeholder="Название">
+<!-- SAVING -->
+<div id="saving" class="page card">
+    <h3 class="saving">🏦 Накопления</h3>
+    <input id="savingName" placeholder="Цель">
     <input id="savingDate" type="date">
-    <input id="savingAmount" type="number">
-    <button onclick="add('saving')">Добавить</button>
+    <input id="savingAmount" type="number" placeholder="Сумма">
+    <button class="action" onclick="add('saving')">Добавить</button>
     <div id="savingList"></div>
 </div>
 
 <script>
-// 🔥 Firebase config (ЗАМЕНИ НА СВОЙ)
+// Firebase config
 const firebaseConfig = {
     apiKey: "YOUR_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -114,14 +181,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 📦 данные
-let data = {
-    income: [],
-    expense: [],
-    saving: []
-};
+let data = { income:[], expense:[], saving:[] };
 
-// ☁️ загрузка данных
 function loadData(){
     ["income","expense","saving"].forEach(type=>{
         db.ref(type).on("value", snap=>{
@@ -131,104 +192,86 @@ function loadData(){
     });
 }
 
-// 💾 сохранение
 function save(type){
     db.ref(type).set(data[type]);
 }
 
-// ➕ добавить запись
 function add(type){
-    let name = document.getElementById(type+"Name").value;
-    let date = document.getElementById(type+"Date").value;
-    let amount = parseFloat(document.getElementById(type+"Amount").value);
+    let name=document.getElementById(type+"Name").value;
+    let date=document.getElementById(type+"Date").value;
+    let amount=parseFloat(document.getElementById(type+"Amount").value);
 
-    if(!name || !date || !amount) return;
+    if(!name||!date||!amount) return;
 
-    data[type].push({name, date, amount});
-
+    data[type].push({name,date,amount});
     save(type);
     render();
 }
 
-// 📅 фильтр
 function matchDate(dateStr){
-    let filter = document.getElementById("filterType").value;
-    let filterDate = document.getElementById("filterDate").value;
+    let filter=document.getElementById("filterType").value;
+    let filterDate=document.getElementById("filterDate").value;
 
-    if(filter === "all" || !filterDate) return true;
+    if(filter==="all"||!filterDate) return true;
 
-    let d = new Date(dateStr);
-    let f = new Date(filterDate);
+    let d=new Date(dateStr);
+    let f=new Date(filterDate);
 
-    if(filter === "day"){
-        return d.toDateString() === f.toDateString();
-    }
+    if(filter==="day") return d.toDateString()===f.toDateString();
 
-    if(filter === "month"){
-        return d.getMonth() === f.getMonth() &&
-               d.getFullYear() === f.getFullYear();
-    }
+    if(filter==="month")
+        return d.getMonth()===f.getMonth() && d.getFullYear()===f.getFullYear();
 
-    if(filter === "year"){
-        return d.getFullYear() === f.getFullYear();
-    }
+    if(filter==="year")
+        return d.getFullYear()===f.getFullYear();
 
     return true;
 }
 
-// 📋 список
 function renderList(type){
-    let list = document.getElementById(type+"List");
-    list.innerHTML = "";
+    let list=document.getElementById(type+"List");
+    list.innerHTML="";
 
     data[type]
-    .filter(e => matchDate(e.date))
+    .filter(e=>matchDate(e.date))
     .forEach(e=>{
-        let div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `
-            <span>${e.date} | ${e.name}</span>
-            <span>${e.amount}</span>
+        let div=document.createElement("div");
+        div.className="item";
+
+        div.innerHTML=`
+            <div>
+                <div>${e.name}</div>
+                <div class="small">${e.date}</div>
+            </div>
+            <div class="${type}">${e.amount}</div>
         `;
         list.appendChild(div);
     });
 }
 
-// 📊 итоги
 function getTotal(type){
-    return data[type].reduce((sum,e)=>sum+e.amount,0);
+    return data[type].reduce((s,e)=>s+e.amount,0);
 }
 
-function renderTotal(){
-    let income = getTotal("income");
-    let expense = getTotal("expense");
-    let saving = getTotal("saving");
-
-    document.getElementById("totalView").innerHTML = `
-        <p>Доходы: ${income || 0}</p>
-        <p>Расходы: ${expense || 0}</p>
-        <p>Накопления: ${saving || 0}</p>
-    `;
-}
-
-// 🔄 render
 function render(){
     renderList("income");
     renderList("expense");
     renderList("saving");
-    renderTotal();
+
+    document.getElementById("totalView").innerHTML=`
+        <p class="income">Доход: ${getTotal("income")}</p>
+        <p class="expense">Расход: ${getTotal("expense")}</p>
+        <p class="saving">Накопления: ${getTotal("saving")}</p>
+    `;
 }
 
-// 📄 переключение страниц
 function showPage(page){
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(page).classList.add("active");
 }
 
-// старт
 loadData();
 render();
-
 </script>
 
 </body>

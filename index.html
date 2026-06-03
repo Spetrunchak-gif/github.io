@@ -1,106 +1,165 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Учёт расходов</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 10px;
-        }
+<meta charset="UTF-8">
+<title>Финансы</title>
 
-        input, button {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            font-size: 16px;
-        }
+<style>
+body {
+    font-family: Arial;
+    max-width: 500px;
+    margin: 20px auto;
+}
 
-        .item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #ddd;
-        }
+nav button {
+    width: 24%;
+    padding: 10px;
+    margin: 2px;
+}
 
-        .total {
-            font-weight: bold;
-            margin-top: 15px;
-        }
-    </style>
+.page {
+    display: none;
+}
+
+.active {
+    display: block;
+}
+
+input, button {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+}
+
+.item {
+    display:flex;
+    justify-content:space-between;
+}
+</style>
 </head>
+
 <body>
 
-<h2>💸 Учёт расходов</h2>
+<h2>💰 Финансовое приложение</h2>
 
-<input type="text" id="name" placeholder="Название расхода">
-<input type="date" id="date">
-<input type="number" id="amount" placeholder="Сумма">
+<!-- НАВИГАЦИЯ -->
+<nav>
+    <button onclick="showPage('total')">Итого</button>
+    <button onclick="showPage('income')">Доходы</button>
+    <button onclick="showPage('expense')">Расходы</button>
+    <button onclick="showPage('saving')">Накопления</button>
+</nav>
 
-<button onclick="addExpense()">Добавить</button>
+<!-- ИТОГО -->
+<div id="total" class="page active">
+    <h3>📊 Итого</h3>
 
-<h3>Список</h3>
-<div id="list"></div>
+    <div id="totalView"></div>
+</div>
 
-<div class="total" id="total">Итого: 0</div>
+<!-- ДОХОДЫ -->
+<div id="income" class="page">
+    <h3>💵 Доходы</h3>
+
+    <input id="incomeName" placeholder="Название">
+    <input id="incomeDate" type="date">
+    <input id="incomeAmount" type="number">
+    <button onclick="add('income')">Добавить</button>
+
+    <div id="incomeList"></div>
+</div>
+
+<!-- РАСХОДЫ -->
+<div id="expense" class="page">
+    <h3>💸 Расходы</h3>
+
+    <input id="expenseName" placeholder="Название">
+    <input id="expenseDate" type="date">
+    <input id="expenseAmount" type="number">
+    <button onclick="add('expense')">Добавить</button>
+
+    <div id="expenseList"></div>
+</div>
+
+<!-- НАКОПЛЕНИЯ -->
+<div id="saving" class="page">
+    <h3>🏦 Накопления</h3>
+
+    <input id="savingName" placeholder="Название">
+    <input id="savingDate" type="date">
+    <input id="savingAmount" type="number">
+    <button onclick="add('saving')">Добавить</button>
+
+    <div id="savingList"></div>
+</div>
 
 <script>
-    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+let data = {
+    income: JSON.parse(localStorage.getItem("income")) || [],
+    expense: JSON.parse(localStorage.getItem("expense")) || [],
+    saving: JSON.parse(localStorage.getItem("saving")) || []
+};
 
-    function save() {
-        localStorage.setItem("expenses", JSON.stringify(expenses));
-    }
+function save(type){
+    localStorage.setItem(type, JSON.stringify(data[type]));
+}
 
-    function addExpense() {
-        const name = document.getElementById("name").value;
-        const date = document.getElementById("date").value;
-        const amount = parseFloat(document.getElementById("amount").value);
+function add(type){
+    let name = document.getElementById(type+"Name").value;
+    let date = document.getElementById(type+"Date").value;
+    let amount = parseFloat(document.getElementById(type+"Amount").value);
 
-        if (!name || !date || !amount) return;
+    if(!name || !date || !amount) return;
 
-        expenses.push({ name, date, amount });
-
-        save();
-        render();
-
-        document.getElementById("name").value = "";
-        document.getElementById("date").value = "";
-        document.getElementById("amount").value = "";
-    }
-
-    function render() {
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-
-        let total = 0;
-
-        expenses.forEach((e, index) => {
-            total += e.amount;
-
-            const div = document.createElement("div");
-            div.className = "item";
-
-            div.innerHTML = `
-                <span>${e.date} | ${e.name}</span>
-                <span>${e.amount.toFixed(2)} €</span>
-                <button onclick="removeExpense(${index})">❌</button>
-            `;
-
-            list.appendChild(div);
-        });
-
-        document.getElementById("total").innerText = "Итого: " + total.toFixed(2) + " €";
-    }
-
-    function removeExpense(index) {
-        expenses.splice(index, 1);
-        save();
-        render();
-    }
-
+    data[type].push({name,date,amount});
+    save(type);
     render();
+}
+
+function renderList(type){
+    let list = document.getElementById(type+"List");
+    list.innerHTML = "";
+
+    data[type].forEach((e,i)=>{
+        let div = document.createElement("div");
+        div.className="item";
+        div.innerHTML = `
+            <span>${e.date} | ${e.name}</span>
+            <span>${e.amount}</span>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function getTotal(type){
+    return data[type].reduce((sum,e)=>sum+e.amount,0);
+}
+
+function renderTotal(){
+    let income = getTotal("income");
+    let expense = getTotal("expense");
+    let saving = getTotal("saving");
+
+    document.getElementById("totalView").innerHTML = `
+        <p>Доходы: ${income || 0}</p>
+        <p>Расходы: ${expense || 0}</p>
+        <p>Накопления: ${saving || 0}</p>
+    `;
+}
+
+function render(){
+    renderList("income");
+    renderList("expense");
+    renderList("saving");
+    renderTotal();
+}
+
+function showPage(page){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
+}
+
+render();
 </script>
 
 </body>

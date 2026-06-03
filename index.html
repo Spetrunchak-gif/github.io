@@ -193,8 +193,6 @@ const db = firebase.database();
 let data = { income:[], expense:[], saving:[] };
 
 function loadData(){
-    let loaded = 0;
-
     ["income","expense","saving"].forEach(type=>{
         db.ref(type).on("value", snap=>{
             let val = snap.val();
@@ -206,11 +204,7 @@ function loadData(){
                 }))
                 : [];
 
-            loaded++;
-
-            if(loaded === 3){
-                render(); // 🔥 один общий рендер
-            }
+            render(); // ✅ просто всегда обновляем UI
         });
     });
 }
@@ -348,7 +342,6 @@ function showPage(page){
 }
 
 loadData();
-render();
 </script>
 
 </body>

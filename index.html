@@ -18,6 +18,15 @@ body{
     background: linear-gradient(135deg,#0f172a,#111827);
     color:#fff;
 }
+    .item{
+    display:flex;
+    justify-content:space-between;
+    padding:10px;
+    margin:5px 0;
+    border-radius:10px;
+    background: rgba(255,255,255,0.05);
+    font-family: monospace;
+}
 
 /* HEADER */
 header{
@@ -209,42 +218,49 @@ function add(type){
 }
 
 function matchDate(dateStr){
-    let filter=document.getElementById("filterType").value;
-    let filterDate=document.getElementById("filterDate").value;
+    let filter = document.getElementById("filterType").value;
+    let filterDate = document.getElementById("filterDate").value;
 
-    if(filter==="all"||!filterDate) return true;
+    if(filter === "all" || !filterDate) return true;
 
-    let d=new Date(dateStr);
-    let f=new Date(filterDate);
+    let d = new Date(dateStr);
+    let f = new Date(filterDate);
 
-    if(filter==="day") return d.toDateString()===f.toDateString();
+    if(filter === "day"){
+        return d.toDateString() === f.toDateString();
+    }
 
-    if(filter==="month")
-        return d.getMonth()===f.getMonth() && d.getFullYear()===f.getFullYear();
+    if(filter === "month"){
+        return d.getMonth() === f.getMonth() &&
+               d.getFullYear() === f.getFullYear();
+    }
 
-    if(filter==="year")
-        return d.getFullYear()===f.getFullYear();
+    if(filter === "year"){
+        return d.getFullYear() === f.getFullYear();
+    }
 
     return true;
 }
 
 function renderList(type){
-    let list=document.getElementById(type+"List");
-    list.innerHTML="";
+    let list = document.getElementById(type+"List");
+    list.innerHTML = "";
 
-    data[type]
-    .filter(e=>matchDate(e.date))
-    .forEach(e=>{
-        let div=document.createElement("div");
-        div.className="item";
+    let filtered = data[type]
+        .filter(e => matchDate(e.date))
+        .sort((a,b) => new Date(b.date) - new Date(a.date)); // 🔥 новые сверху
 
-        div.innerHTML=`
-            <div>
-                <div>${e.name}</div>
-                <div class="small">${e.date}</div>
-            </div>
-            <div class="${type}">${e.amount}</div>
+    filtered.forEach(e=>{
+        let div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+            <span>
+                ${e.name} | ${e.date}
+            </span>
+            <span>${e.amount}</span>
         `;
+
         list.appendChild(div);
     });
 }
@@ -254,14 +270,27 @@ function getTotal(type){
 }
 
 function render(){
+
     renderList("income");
     renderList("expense");
     renderList("saving");
 
-    document.getElementById("totalView").innerHTML=`
-        <p class="income">Доход: ${getTotal("income")}</p>
-        <p class="expense">Расход: ${getTotal("expense")}</p>
-        <p class="saving">Накопления: ${getTotal("saving")}</p>
+    let income = getTotal("income");
+    let expense = getTotal("expense");
+    let saving = getTotal("saving");
+
+    let difference = income - expense;
+    let total = difference + saving;
+
+    document.getElementById("totalView").innerHTML = `
+        <p>💵 Доходы: ${income}</p>
+        <p>💸 Расходы: ${expense}</p>
+        <p>📊 Разница: ${difference}</p>
+        <p>🏦 Накопления: ${saving}</p>
+        <hr>
+        <p style="font-size:18px;font-weight:bold">
+            💳 Итого: ${total}
+        </p>
     `;
 }
 

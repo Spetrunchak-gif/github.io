@@ -216,9 +216,9 @@ function loadData(){
 }
 
 function add(type){
-    let name = document.getElementById(type+"Name").value;
-    let date = document.getElementById(type+"Date").value;
-    let amount = parseFloat(document.getElementById(type+"Amount").value);
+    let name = document.getElementById(type + "Name").value;
+    let date = document.getElementById(type + "Date").value;
+    let amount = parseFloat(document.getElementById(type + "Amount").value);
 
     if(!name || !date || isNaN(amount)) return;
 
@@ -227,20 +227,12 @@ function add(type){
         date,
         amount
     });
+
+    // очистка полей
+    document.getElementById(type + "Name").value = "";
+    document.getElementById(type + "Date").value = "";
+    document.getElementById(type + "Amount").value = "";
 }
-
-function add(type){
-    let name=document.getElementById(type+"Name").value;
-    let date=document.getElementById(type+"Date").value;
-    let amount=parseFloat(document.getElementById(type+"Amount").value);
-
-    if(!name || !date || isNaN(amount)) return;
-
-    data[type].push({name,date,amount});
-    save(type);
-    render();
-}
-
 function matchDate(dateStr){
     let filter = document.getElementById("filterType").value;
     let filterDate = document.getElementById("filterDate").value;

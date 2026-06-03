@@ -190,22 +190,21 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let data = { income:[], expense:[], saving:[] };
+let data = [];
 
 function loadData(){
-    ["income","expense","saving"].forEach(type=>{
-        db.ref(type).on("value", snap=>{
-            let val = snap.val();
+    db.ref("transactions").on("value", snap=>{
+        const val = snap.val();
 
-            data[type] = val
-                ? Object.entries(val).map(([id, item]) => ({
-                    id,
-                    ...item
-                }))
-                : [];
+        const arr = val
+            ? Object.entries(val).map(([id, item]) => ({
+                id,
+                ...item
+            }))
+            : [];
 
-            render(); // ✅ просто всегда обновляем UI
-        });
+        data = arr;
+        render();
     });
 }
 
@@ -216,10 +215,12 @@ function add(type){
 
     if(!name || !date || isNaN(amount)) return;
 
-    db.ref(type).push({
+    db.ref("transactions").push({
+        type,
         name,
         date,
-        amount
+        amount,
+        category: ""
     });
 
     // очистка полей
@@ -252,15 +253,40 @@ function matchDate(dateStr){
     return true;
 }
 
+function getTotal(type){
+    return data
+        .filter(t => t.type === type)
+        .reduce((s, e) => s + e.amount, 0);
+}
+function removeItem(id){
+    db.ref("transactions").child(id).remove();
+}
+function editItem(id){
+    let item = data.find(e => e.id === id);
+
+    let name = prompt("Название", item.name);
+    let date = prompt("Дата", item.date);
+    let amount = prompt("Сумма", item.amount);
+
+    if(!name || !date || !amount) return;
+
+    db.ref("transactions").child(id).update({
+        name,
+        date,
+        amount: parseFloat(amount)
+    });
+}
+
 function renderList(type){
-    let list = document.getElementById(type+"List");
+    let list = document.getElementById(type + "List");
     list.innerHTML = "";
 
-    let filtered = data[type]
-        .filter(e => matchDate(e.date))
-        .sort((a,b) => new Date(b.date) - new Date(a.date));
+    let filtered = data
+        .filter(t => t.type === type)
+        .filter(t => matchDate(t.date))
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    filtered.forEach(e=>{
+    filtered.forEach(e => {
         let div = document.createElement("div");
         div.className = "item";
 
@@ -273,12 +299,12 @@ function renderList(type){
             <div style="display:flex;gap:8px;align-items:center">
                 <div>${e.amount}</div>
 
-                <button onclick="editItem('${type}','${e.id}')"
+                <button onclick="editItem('${e.id}')"
                     style="background:#3b82f6;color:#fff;border:none;border-radius:6px;padding:4px 6px;">
                     ✏️
                 </button>
 
-                <button onclick="removeItem('${type}','${e.id}')"
+                <button onclick="removeItem('${e.id}')"
                     style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:4px 6px;">
                     🗑️
                 </button>
@@ -288,30 +314,11 @@ function renderList(type){
         list.appendChild(div);
     });
 }
-
-function getTotal(type){
-    return data[type].reduce((s,e)=>s+e.amount,0);
+function showPage(page){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
 }
-function removeItem(type, id){
-    db.ref(type).child(id).remove();
-}
-function editItem(type, id){
-    let item = data[type].find(e => e.id === id);
-
-    let name = prompt("Название", item.name);
-    let date = prompt("Дата", item.date);
-    let amount = prompt("Сумма", item.amount);
-
-    if(!name || !date || !amount) return;
-
-    db.ref(type).child(id).update({
-        name,
-        date,
-        amount: parseFloat(amount)
-    });
-}
-
-function render(){
+    function render(){
 
     renderList("income");
     renderList("expense");
@@ -334,11 +341,6 @@ function render(){
             💳 Итого: ${total}
         </p>
     `;
-}
-
-function showPage(page){
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    document.getElementById(page).classList.add("active");
 }
 
 loadData();

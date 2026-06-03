@@ -2,7 +2,11 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Финансы</title>
+<title>Финансовое приложение</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <style>
 body {
@@ -25,15 +29,15 @@ nav button {
     display: block;
 }
 
-input, button {
+input, button, select {
     width: 100%;
     padding: 10px;
     margin: 5px 0;
 }
 
 .item {
-    display:flex;
-    justify-content:space-between;
+    display: flex;
+    justify-content: space-between;
 }
 </style>
 </head>
@@ -50,60 +54,89 @@ input, button {
     <button onclick="showPage('saving')">Накопления</button>
 </nav>
 
+<!-- ФИЛЬТР -->
+<h3>📅 Фильтр</h3>
+
+<select id="filterType" onchange="render()">
+    <option value="all">Все</option>
+    <option value="day">День</option>
+    <option value="month">Месяц</option>
+    <option value="year">Год</option>
+</select>
+
+<input type="date" id="filterDate" onchange="render()">
+
 <!-- ИТОГО -->
 <div id="total" class="page active">
     <h3>📊 Итого</h3>
-
     <div id="totalView"></div>
 </div>
 
 <!-- ДОХОДЫ -->
 <div id="income" class="page">
     <h3>💵 Доходы</h3>
-
     <input id="incomeName" placeholder="Название">
     <input id="incomeDate" type="date">
     <input id="incomeAmount" type="number">
     <button onclick="add('income')">Добавить</button>
-
     <div id="incomeList"></div>
 </div>
 
 <!-- РАСХОДЫ -->
 <div id="expense" class="page">
     <h3>💸 Расходы</h3>
-
     <input id="expenseName" placeholder="Название">
     <input id="expenseDate" type="date">
     <input id="expenseAmount" type="number">
     <button onclick="add('expense')">Добавить</button>
-
     <div id="expenseList"></div>
 </div>
 
 <!-- НАКОПЛЕНИЯ -->
 <div id="saving" class="page">
     <h3>🏦 Накопления</h3>
-
     <input id="savingName" placeholder="Название">
     <input id="savingDate" type="date">
     <input id="savingAmount" type="number">
     <button onclick="add('saving')">Добавить</button>
-
     <div id="savingList"></div>
 </div>
 
 <script>
-let data = {
-    income: JSON.parse(localStorage.getItem("income")) || [],
-    expense: JSON.parse(localStorage.getItem("expense")) || [],
-    saving: JSON.parse(localStorage.getItem("saving")) || []
+// 🔥 Firebase config (ЗАМЕНИ НА СВОЙ)
+const firebaseConfig = {
+    apiKey: "YOUR_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    projectId: "YOUR_PROJECT",
 };
 
-function save(type){
-    localStorage.setItem(type, JSON.stringify(data[type]));
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// 📦 данные
+let data = {
+    income: [],
+    expense: [],
+    saving: []
+};
+
+// ☁️ загрузка данных
+function loadData(){
+    ["income","expense","saving"].forEach(type=>{
+        db.ref(type).on("value", snap=>{
+            data[type] = snap.val() || [];
+            render();
+        });
+    });
 }
 
+// 💾 сохранение
+function save(type){
+    db.ref(type).set(data[type]);
+}
+
+// ➕ добавить запись
 function add(type){
     let name = document.getElementById(type+"Name").value;
     let date = document.getElementById(type+"Date").value;
@@ -111,18 +144,48 @@ function add(type){
 
     if(!name || !date || !amount) return;
 
-    data[type].push({name,date,amount});
+    data[type].push({name, date, amount});
+
     save(type);
     render();
 }
 
+// 📅 фильтр
+function matchDate(dateStr){
+    let filter = document.getElementById("filterType").value;
+    let filterDate = document.getElementById("filterDate").value;
+
+    if(filter === "all" || !filterDate) return true;
+
+    let d = new Date(dateStr);
+    let f = new Date(filterDate);
+
+    if(filter === "day"){
+        return d.toDateString() === f.toDateString();
+    }
+
+    if(filter === "month"){
+        return d.getMonth() === f.getMonth() &&
+               d.getFullYear() === f.getFullYear();
+    }
+
+    if(filter === "year"){
+        return d.getFullYear() === f.getFullYear();
+    }
+
+    return true;
+}
+
+// 📋 список
 function renderList(type){
     let list = document.getElementById(type+"List");
     list.innerHTML = "";
 
-    data[type].forEach((e,i)=>{
+    data[type]
+    .filter(e => matchDate(e.date))
+    .forEach(e=>{
         let div = document.createElement("div");
-        div.className="item";
+        div.className = "item";
         div.innerHTML = `
             <span>${e.date} | ${e.name}</span>
             <span>${e.amount}</span>
@@ -131,6 +194,7 @@ function renderList(type){
     });
 }
 
+// 📊 итоги
 function getTotal(type){
     return data[type].reduce((sum,e)=>sum+e.amount,0);
 }
@@ -147,6 +211,7 @@ function renderTotal(){
     `;
 }
 
+// 🔄 render
 function render(){
     renderList("income");
     renderList("expense");
@@ -154,12 +219,16 @@ function render(){
     renderTotal();
 }
 
+// 📄 переключение страниц
 function showPage(page){
     document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(page).classList.add("active");
 }
 
+// старт
+loadData();
 render();
+
 </script>
 
 </body>

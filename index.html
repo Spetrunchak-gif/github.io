@@ -201,7 +201,7 @@ function add(type){
     let date=document.getElementById(type+"Date").value;
     let amount=parseFloat(document.getElementById(type+"Amount").value);
 
-    if(!name||!date||!amount) return;
+    if(!name || !date || isNaN(amount)) return;
 
     data[type].push({name,date,amount});
     save(type);
